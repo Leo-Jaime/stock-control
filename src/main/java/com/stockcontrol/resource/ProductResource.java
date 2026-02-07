@@ -1,12 +1,14 @@
-package com.example.resource;
+package com.stockcontrol.resource;
 
-import com.example.domain.Product;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.lang.annotation.Repeatable;
 import java.util.List;
+
+import com.stockcontrol.entity.Product;
 
 @Path("/products")
 @Produces(MediaType.APPLICATION_JSON)
@@ -78,24 +80,65 @@ public class ProductResource {
     @PUT
     @Path("/{id}")
     @Transactional
-    public Product update(@PathParam("id") Long id, Product data) {
-        Product product = Product.findById(id);
+    public Response update(@PathParam("id") Long id, Product data) {
+        try {
+            if (data == null) { 
+                return Response.status(Response.Status.BAD_REQUEST).entity("Dados do produto requirido").build();
+            }
+            
+            Product product = Product.findById(id);
+            if (product == null){
+                return Response.status(Response.Status.NOT_FOUND).entity("Produto não econtrado id: " + id).build();
+            }
 
-        if (product == null) {
-            throw new NotFoundException();
+            if (data.code == null || data.code.trim().isEmpty()){
+                return Response.status(Response.Status.BAD_REQUEST).entity("codigo do produto requirido").build();
+            }
+
+            if (data.name == null || data.name.trim().isEmpty()){
+                return Response.status(Response.Status.BAD_REQUEST).entity("nome do produto requirido").build();
+            } 
+            
+            if (data.value == null || data.value.doubleValue() <= 0){
+                return Response.status(Response.Status.BAD_REQUEST).entity("O valor do produto deve ser maior do que zero").build();
+            }
+
+            if (!product.code.equals(data.code)){
+                Product existingProduct = Product.find("code", data.code).firstResult();
+                if (existingProduct != null){
+                    return Response.status(Response.Status.CONFLICT).entity("Produto com o code : '" + data.code + "' já existe").build();
+                }
+            }
+
+            product.code = data.code;
+            product.name = data.name;
+            product.value = data.value;
+            product.persist();
+
+            return Response.ok(product).build();
+
+        } catch (Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Err ao autualizar o produto " + e.getMessage()).build();
         }
 
-        product.code = data.code;
-        product.name = data.name;
-        product.value = data.value;
-
-        return product;
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
-    public void delete(@PathParam("id") Long id) {
-        Product.deleteById(id);
+    public Response delete(@PathParam("id") Long id) {
+        try {
+
+            boolean deleted = Product.deleteById(id);
+
+            if (!deleted) {
+                return Response.status(Response.Status.NOT_FOUND).entity("Produto nao encontrado com o id: " + id).build();
+            }
+
+            return Response.noContent().build();
+
+        } catch (Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao deletar produto: " + e.getMessage()).build();
+        }
     }
 }

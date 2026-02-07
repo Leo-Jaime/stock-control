@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.stockcontrol.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,6 +7,8 @@ import jakarta.persistence.Table;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 @Entity
@@ -23,5 +25,6 @@ public class RawMaterial extends PanacheEntity {
     public Integer stockQuantity;
 
     @OneToMany(mappedBy = "rawMaterial")
+    @JsonIgnore
     public List<ProductRawMaterial> products;
 }

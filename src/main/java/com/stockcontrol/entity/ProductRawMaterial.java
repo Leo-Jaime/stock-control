@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.stockcontrol.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

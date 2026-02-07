@@ -30,7 +30,8 @@ Sistema para controlar estoque de matérias-primas e produtos de uma indústria.
 
 - `GET /products` - Lista todos os produtos
 - `GET /products/{id}` - Busca produto por ID
-- `POST /products` - Cria novo produto
+- `PUT /products{id}` - Atualiza produto
+- `DELETE /products{id}` - Deleta produto
 
 ### Exemplo de requisição POST:
 

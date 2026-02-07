@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.stockcontrol.entity;
 
 import java.math.BigDecimal;
 import jakarta.persistence.Column;
@@ -8,6 +8,8 @@ import jakarta.persistence.Table;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 @Entity
@@ -24,5 +26,6 @@ public class Product extends PanacheEntity {
     public BigDecimal value;
 
     @OneToMany(mappedBy = "product")
+    @JsonIgnore
     public List<ProductRawMaterial> rawMaterials;
 }
