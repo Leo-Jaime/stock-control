@@ -5,7 +5,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.lang.annotation.Repeatable;
 import java.util.List;
 
 import com.stockcontrol.entity.Product;
