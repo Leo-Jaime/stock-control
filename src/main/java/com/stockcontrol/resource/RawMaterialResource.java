@@ -1,7 +1,5 @@
 package com.stockcontrol.resource;
 
-import java.lang.annotation.Repeatable;
-
 import com.stockcontrol.entity.RawMaterial;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -21,7 +19,7 @@ public class RawMaterialResource {
             List<RawMaterial> rawMaterials = RawMaterial.listAll();
             return Response.ok(rawMaterials).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar matérias primas: " + e.getMessage()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar matérias-primas: " + e.getMessage()).build();
         }
     }
 
@@ -29,15 +27,15 @@ public class RawMaterialResource {
     @Path("/{id}")
     public Response findById(@PathParam("id") Long id){
         try {
-            RawMAterial rawMaterial = RawMaterial.findById(id);
+            RawMaterial rawMaterial = RawMaterial.findById(id);
 
             if (rawMaterial == null) {
-                return Reponse.status(Response.Status.NOT_FOUND).entity("Matéria prima nao econtrada com o id:" + id).build();
+                return Response.status(Response.Status.NOT_FOUND).entity("Matéria-prima não encontrada com o id: " + id).build();
             }
 
             return Response.ok(rawMaterial).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar a matéria prima: " + e.getMessage()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar a matéria-prima: " + e.getMessage()).build();
         }
     }
 
@@ -46,15 +44,15 @@ public class RawMaterialResource {
     public Response create(RawMaterial rawMaterial){
         try {
             if (rawMaterial == null){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Os dados da matéria prima e requirido").build();
+                return Response.status(Response.Status.BAD_REQUEST).entity("Os dados da matéria-prima são requeridos").build();
             }
 
             if(rawMaterial.code == null || rawMaterial.code.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Codigo do matérial e requirido").build();
+                return Response.status(Response.Status.BAD_REQUEST).entity("Código do material é requerido").build();
             }
 
             if (rawMaterial.name == null || rawMaterial.name.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Nome do matérial e requirido").build();
+                return Response.status(Response.Status.BAD_REQUEST).entity("Nome do material é requerido").build();
             }
 
             if (rawMaterial.stockQuantity == null || rawMaterial.stockQuantity < 0){
@@ -63,7 +61,7 @@ public class RawMaterialResource {
 
             RawMaterial existingRawMaterial = RawMaterial.find("code", rawMaterial.code).firstResult();
             if ( existingRawMaterial != null) { 
-                return Response.status(Response.Status.CONFLICT).entity("Matéria prima com codigo: '" + rawMaterial.code + "' já existe!").build();
+                return Response.status(Response.Status.CONFLICT).entity("Matéria-prima com código '" + rawMaterial.code + "' já existe!").build();
             }
 
             rawMaterial.persist();
@@ -71,7 +69,7 @@ public class RawMaterialResource {
             return Response.status(Response.Status.CREATED).entity(rawMaterial).build();
 
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao criar matéria prima: " + e.getMessage()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao criar matéria-prima: " + e.getMessage()).build();
         }
     }
 
@@ -83,7 +81,7 @@ public class RawMaterialResource {
             
             if (data == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Os dados da matéria prima são obrigatórios.")
+                    .entity("Os dados da matéria-prima são obrigatórios.")
                     .build();
             }
 
@@ -92,7 +90,7 @@ public class RawMaterialResource {
 
             if (rawMaterial == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Matéria prima não encontrada para o ID informado: " + id)
+                    .entity("Matéria-prima não encontrada para o id informado: " + id)
                     .build();
             }
 
@@ -120,7 +118,7 @@ public class RawMaterialResource {
                 RawMaterial existingRawMaterial = RawMaterial.find("code", data.code).firstResult();
                 if (existingRawMaterial != null) {
                     return Response.status(Response.Status.CONFLICT)
-                        .entity("Já existe uma matéria prima cadastrada com o código '" + data.code + "'")
+                        .entity("Já existe uma matéria-prima cadastrada com o código '" + data.code + "'")
                         .build();
                 }
             }
@@ -135,7 +133,7 @@ public class RawMaterialResource {
             
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("Error updating raw material: " + e.getMessage())
+                .entity("Erro ao atualizar matéria-prima: " + e.getMessage())
                 .build();
         }
     }
@@ -149,7 +147,7 @@ public class RawMaterialResource {
             
             if (!deleted) {
                 return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Matéria prima não encontrada com o id: " + id)
+                    .entity("Matéria-prima não encontrada com o id: " + id)
                     .build();
             }
             
@@ -157,7 +155,7 @@ public class RawMaterialResource {
             
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("Erro ao deletar Matéria prima: " + e.getMessage())
+                .entity("Erro ao deletar matéria-prima: " + e.getMessage())
                 .build();
         }
     }
