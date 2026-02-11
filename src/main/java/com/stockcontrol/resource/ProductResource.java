@@ -6,8 +6,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.stockcontrol.dto.ProductRequest;
+import com.stockcontrol.dto.ProductResponse;
 import com.stockcontrol.entity.Product;
+import com.stockcontrol.exception.ConflictException;
+import com.stockcontrol.exception.NotFoundException;
+import com.stockcontrol.exception.ValidationException;
 
 @Path("/products")
 @Produces(MediaType.APPLICATION_JSON)
@@ -16,128 +22,107 @@ public class ProductResource {
 
     @GET
     public Response findAll() {
-        try {
-            List<Product> products = Product.listAll();
-            return Response.ok(products).build();
-        } catch (Exception e ){
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar produtos: " + e.getMessage()).build();
-        }
-
-
-        }
+        List<Product> products = Product.listAll();
+        List<ProductResponse> response = products.stream()
+            .map(ProductResponse::fromEntity)
+            .collect(Collectors.toList());
+        return Response.ok(response).build();
+    }
 
     @GET
     @Path("/{id}")
     public Response findById(@PathParam("id") Long id) {
-        try{
-            Product product = Product.findById(id);
+        Product product = Product.findById(id);
 
-            if (product == null){
-                return Response.status(Response.Status.NOT_FOUND).entity("Produto não encontrado com id: " + id).build();
-            }
-
-            return Response.ok(product).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar produto: " + e.getMessage()).build();
+        if (product == null) {
+            throw new NotFoundException("Produto não encontrado com id: " + id);
         }
-    }
 
+        return Response.ok(ProductResponse.fromEntity(product)).build();
+    }
 
     @POST
     @Transactional
-    public Response create(Product product) {
-        try {
-            if (product == null){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Dados do produto requeridos").build();
-            }
-            
-            if (product.code == null || product.code.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Código do produto requerido").build();
-            }
-
-            if (product.name == null || product.name.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Nome do produto requerido").build();
-            }
-
-            if (product.value == null || product.value.doubleValue() <= 0){
-                return Response.status(Response.Status.BAD_REQUEST).entity("O valor do produto deve ser maior que zero").build();
-            }
-            
-            Product existingProduct = Product.find("code", product.code).firstResult();
-            if (existingProduct != null){
-                return Response.status(Response.Status.CONFLICT).entity("Produto com o código '"+ product.code + "' já existe").build();
-            }
-
-            product.persist();
-
-            return Response.status(Response.Status.CREATED).entity(product).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao criar produto: " + e.getMessage()).build();
+    public Response create(ProductRequest request) {
+        if (request == null) {
+            throw new ValidationException("Dados do produto requeridos");
         }
+
+        if (request.code == null || request.code.trim().isEmpty()) {
+            throw new ValidationException("Código do produto requerido");
+        }
+
+        if (request.name == null || request.name.trim().isEmpty()) {
+            throw new ValidationException("Nome do produto requerido");
+        }
+
+        if (request.value == null || request.value.doubleValue() <= 0) {
+            throw new ValidationException("O valor do produto deve ser maior que zero");
+        }
+
+        Product existingProduct = Product.find("code", request.code).firstResult();
+        if (existingProduct != null) {
+            throw new ConflictException("Produto com o código '" + request.code + "' já existe");
+        }
+
+        Product product = request.toEntity();
+        product.persist();
+
+        return Response.status(Response.Status.CREATED)
+            .entity(ProductResponse.fromEntity(product))
+            .build();
     }
 
     @PUT
     @Path("/{id}")
     @Transactional
-    public Response update(@PathParam("id") Long id, Product data) {
-        try {
-            if (data == null) { 
-                return Response.status(Response.Status.BAD_REQUEST).entity("Dados do produto requeridos").build();
-            }
-            
-            Product product = Product.findById(id);
-            if (product == null){
-                return Response.status(Response.Status.NOT_FOUND).entity("Produto não econtrado id: " + id).build();
-            }
-
-            if (data.code == null || data.code.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Código do produto requerido").build();
-            }
-
-            if (data.name == null || data.name.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Nome do produto requerido").build();
-            } 
-            
-            if (data.value == null || data.value.doubleValue() <= 0){
-                return Response.status(Response.Status.BAD_REQUEST).entity("O valor do produto deve ser maior que zero").build();
-            }
-
-            if (!product.code.equals(data.code)){
-                Product existingProduct = Product.find("code", data.code).firstResult();
-                if (existingProduct != null){
-                    return Response.status(Response.Status.CONFLICT).entity("Produto com o código : '" + data.code + "' já existe").build();
-                }
-            }
-
-            product.code = data.code;
-            product.name = data.name;
-            product.value = data.value;
-            product.persist();
-
-            return Response.ok(product).build();
-
-        } catch (Exception e){
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao atualizar o produto: " + e.getMessage()).build();
+    public Response update(@PathParam("id") Long id, ProductRequest request) {
+        if (request == null) {
+            throw new ValidationException("Dados do produto requeridos");
         }
 
+        Product product = Product.findById(id);
+        if (product == null) {
+            throw new NotFoundException("Produto não encontrado com id: " + id);
+        }
+
+        if (request.code == null || request.code.trim().isEmpty()) {
+            throw new ValidationException("Código do produto requerido");
+        }
+
+        if (request.name == null || request.name.trim().isEmpty()) {
+            throw new ValidationException("Nome do produto requerido");
+        }
+
+        if (request.value == null || request.value.doubleValue() <= 0) {
+            throw new ValidationException("O valor do produto deve ser maior que zero");
+        }
+
+        if (!product.code.equals(request.code)) {
+            Product existingProduct = Product.find("code", request.code).firstResult();
+            if (existingProduct != null) {
+                throw new ConflictException("Produto com o código: '" + request.code + "' já existe");
+            }
+        }
+
+        product.code = request.code;
+        product.name = request.name;
+        product.value = request.value;
+        product.persist();
+
+        return Response.ok(ProductResponse.fromEntity(product)).build();
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
     public Response delete(@PathParam("id") Long id) {
-        try {
+        boolean deleted = Product.deleteById(id);
 
-            boolean deleted = Product.deleteById(id);
-
-            if (!deleted) {
-                return Response.status(Response.Status.NOT_FOUND).entity("Produto não encontrado com id: " + id).build();
-            }
-
-            return Response.noContent().build();
-
-        } catch (Exception e){
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao deletar produto:  " + e.getMessage()).build();
+        if (!deleted) {
+            throw new NotFoundException("Produto não encontrado com id: " + id);
         }
+
+        return Response.noContent().build();
     }
 }

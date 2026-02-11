@@ -1,162 +1,129 @@
 package com.stockcontrol.resource;
 
+import com.stockcontrol.dto.RawMaterialRequest;
+import com.stockcontrol.dto.RawMaterialResponse;
 import com.stockcontrol.entity.RawMaterial;
+import com.stockcontrol.exception.ConflictException;
+import com.stockcontrol.exception.NotFoundException;
+import com.stockcontrol.exception.ValidationException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/raw-materials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class RawMaterialResource {
-    
+
     @GET
-    public Response findAll(){
-        try {
-            List<RawMaterial> rawMaterials = RawMaterial.listAll();
-            return Response.ok(rawMaterials).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar matérias-primas: " + e.getMessage()).build();
-        }
+    public Response findAll() {
+        List<RawMaterial> rawMaterials = RawMaterial.listAll();
+        List<RawMaterialResponse> response = rawMaterials.stream()
+            .map(RawMaterialResponse::fromEntity)
+            .collect(Collectors.toList());
+        return Response.ok(response).build();
     }
 
     @GET
     @Path("/{id}")
-    public Response findById(@PathParam("id") Long id){
-        try {
-            RawMaterial rawMaterial = RawMaterial.findById(id);
+    public Response findById(@PathParam("id") Long id) {
+        RawMaterial rawMaterial = RawMaterial.findById(id);
 
-            if (rawMaterial == null) {
-                return Response.status(Response.Status.NOT_FOUND).entity("Matéria-prima não encontrada com o id: " + id).build();
-            }
-
-            return Response.ok(rawMaterial).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao recuperar a matéria-prima: " + e.getMessage()).build();
+        if (rawMaterial == null) {
+            throw new NotFoundException("Matéria-prima não encontrada com o id: " + id);
         }
+
+        return Response.ok(RawMaterialResponse.fromEntity(rawMaterial)).build();
     }
 
     @POST
     @Transactional
-    public Response create(RawMaterial rawMaterial){
-        try {
-            if (rawMaterial == null){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Os dados da matéria-prima são requeridos").build();
-            }
-
-            if(rawMaterial.code == null || rawMaterial.code.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Código do material é requerido").build();
-            }
-
-            if (rawMaterial.name == null || rawMaterial.name.trim().isEmpty()){
-                return Response.status(Response.Status.BAD_REQUEST).entity("Nome do material é requerido").build();
-            }
-
-            if (rawMaterial.stockQuantity == null || rawMaterial.stockQuantity < 0){
-                return Response.status(Response.Status.BAD_REQUEST).entity("A quantidade em estoque deve ser zero ou maior.").build();
-            }
-
-            RawMaterial existingRawMaterial = RawMaterial.find("code", rawMaterial.code).firstResult();
-            if ( existingRawMaterial != null) { 
-                return Response.status(Response.Status.CONFLICT).entity("Matéria-prima com código '" + rawMaterial.code + "' já existe!").build();
-            }
-
-            rawMaterial.persist();
-
-            return Response.status(Response.Status.CREATED).entity(rawMaterial).build();
-
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erro ao criar matéria-prima: " + e.getMessage()).build();
+    public Response create(RawMaterialRequest request) {
+        if (request == null) {
+            throw new ValidationException("Os dados da matéria-prima são requeridos");
         }
+
+        if (request.code == null || request.code.trim().isEmpty()) {
+            throw new ValidationException("Código do material é requerido");
+        }
+
+        if (request.name == null || request.name.trim().isEmpty()) {
+            throw new ValidationException("Nome do material é requerido");
+        }
+
+        if (request.stockQuantity == null || request.stockQuantity < 0) {
+            throw new ValidationException("A quantidade em estoque deve ser zero ou maior.");
+        }
+
+        RawMaterial existingRawMaterial = RawMaterial.find("code", request.code).firstResult();
+        if (existingRawMaterial != null) {
+            throw new ConflictException("Matéria-prima com código '" + request.code + "' já existe!");
+        }
+
+        RawMaterial rawMaterial = request.toEntity();
+        rawMaterial.persist();
+
+        return Response.status(Response.Status.CREATED)
+            .entity(RawMaterialResponse.fromEntity(rawMaterial))
+            .build();
     }
 
     @PUT
     @Path("/{id}")
     @Transactional
-    public Response update(@PathParam("id") Long id, RawMaterial data) {
-        try {
-            
-            if (data == null) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Os dados da matéria-prima são obrigatórios.")
-                    .build();
-            }
-
-            
-            RawMaterial rawMaterial = RawMaterial.findById(id);
-
-            if (rawMaterial == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Matéria-prima não encontrada para o id informado: " + id)
-                    .build();
-            }
-
-            
-            if (data.code == null || data.code.trim().isEmpty()) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("O código da matéria-prima é obrigatório.")
-                    .build();
-            }
-
-            if (data.name == null || data.name.trim().isEmpty()) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("O nome da matéria-prima é obrigatório.")
-                    .build();
-            }
-
-            if (data.stockQuantity == null || data.stockQuantity < 0) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("A quantidade em estoque deve ser zero ou maior.")
-                    .build();
-            }
-
-            // Validação codigo duplicado 
-            if (!rawMaterial.code.equals(data.code)) {
-                RawMaterial existingRawMaterial = RawMaterial.find("code", data.code).firstResult();
-                if (existingRawMaterial != null) {
-                    return Response.status(Response.Status.CONFLICT)
-                        .entity("Já existe uma matéria-prima cadastrada com o código '" + data.code + "'")
-                        .build();
-                }
-            }
-
-            // Atualiza os dados
-            rawMaterial.code = data.code;
-            rawMaterial.name = data.name;
-            rawMaterial.stockQuantity = data.stockQuantity;
-            rawMaterial.persist();
-
-            return Response.ok(rawMaterial).build();
-            
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("Erro ao atualizar matéria-prima: " + e.getMessage())
-                .build();
+    public Response update(@PathParam("id") Long id, RawMaterialRequest request) {
+        if (request == null) {
+            throw new ValidationException("Os dados da matéria-prima são obrigatórios.");
         }
+
+        RawMaterial rawMaterial = RawMaterial.findById(id);
+        if (rawMaterial == null) {
+            throw new NotFoundException("Matéria-prima não encontrada para o id informado: " + id);
+        }
+
+        if (request.code == null || request.code.trim().isEmpty()) {
+            throw new ValidationException("O código da matéria-prima é obrigatório.");
+        }
+
+        if (request.name == null || request.name.trim().isEmpty()) {
+            throw new ValidationException("O nome da matéria-prima é obrigatório.");
+        }
+
+        if (request.stockQuantity == null || request.stockQuantity < 0) {
+            throw new ValidationException("A quantidade em estoque deve ser zero ou maior.");
+        }
+
+        // Validação codigo duplicado
+        if (!rawMaterial.code.equals(request.code)) {
+            RawMaterial existingRawMaterial = RawMaterial.find("code", request.code).firstResult();
+            if (existingRawMaterial != null) {
+                throw new ConflictException("Já existe uma matéria-prima cadastrada com o código '" + request.code + "'");
+            }
+        }
+
+        // Atualiza os dados
+        rawMaterial.code = request.code;
+        rawMaterial.name = request.name;
+        rawMaterial.stockQuantity = request.stockQuantity;
+        rawMaterial.persist();
+
+        return Response.ok(RawMaterialResponse.fromEntity(rawMaterial)).build();
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
     public Response delete(@PathParam("id") Long id) {
-        try {
-            boolean deleted = RawMaterial.deleteById(id);
-            
-            if (!deleted) {
-                return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Matéria-prima não encontrada com o id: " + id)
-                    .build();
-            }
-            
-            return Response.noContent().build();
-            
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("Erro ao deletar matéria-prima: " + e.getMessage())
-                .build();
+        boolean deleted = RawMaterial.deleteById(id);
+
+        if (!deleted) {
+            throw new NotFoundException("Matéria-prima não encontrada com o id: " + id);
         }
+
+        return Response.noContent().build();
     }
 }
