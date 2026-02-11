@@ -1,16 +1,27 @@
 package com.stockcontrol.exception;
 
 import com.stockcontrol.dto.ErrorResponse;
-
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+
+import java.util.stream.Collectors;
 
 @Provider
 public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception exception) {
+
+        if (exception instanceof ConstraintViolationException) {
+            String messages = ((ConstraintViolationException) exception).getConstraintViolations()
+                .stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining("; "));
+            return buildResponse(Response.Status.BAD_REQUEST, messages);
+        }
 
         if (exception instanceof NotFoundException) {
             return buildResponse(Response.Status.NOT_FOUND, exception.getMessage());
