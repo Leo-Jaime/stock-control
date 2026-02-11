@@ -91,6 +91,38 @@ public class ProductRawMaterialResource {
             .build();
     }
 
+    @PUT
+    @Path("/{associationId}")
+    @Transactional
+    public Response updateRawMaterial(
+            @PathParam("productId") Long productId,
+            @PathParam("associationId") Long associationId,
+            ProductRawMaterialRequest request) {
+
+        if (request == null) {
+            throw new ValidationException("Dados da requisição são obrigatórios");
+        }
+
+        if (request.requiredQuantity == null || request.requiredQuantity <= 0) {
+            throw new ValidationException("Quantidade necessária deve ser maior que zero");
+        }
+
+        ProductRawMaterial association = ProductRawMaterial.findById(associationId);
+
+        if (association == null) {
+            throw new NotFoundException("Associação não encontrada com id: " + associationId);
+        }
+
+        if (!association.product.id.equals(productId)) {
+            throw new ValidationException("Associação não pertence a este produto");
+        }
+
+        association.requiredQuantity = request.requiredQuantity;
+        association.persist();
+
+        return Response.ok(ProductRawMaterialResponse.fromEntity(association)).build();
+    }
+
     @DELETE
     @Path("/{associationId}")
     @Transactional

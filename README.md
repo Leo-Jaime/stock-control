@@ -9,20 +9,25 @@ Sistema para controlar estoque de matérias-primas e produtos de uma indústria.
 - Hibernate ORM + Panache
 - RESTEasy Reactive (Quarkus REST)
 - Jackson (JSON)
-- H2 Database (desenvolvimento)
-- PostgreSQL (produção)
+- PostgreSQL 15 (Docker)
 - Maven
 
 ## Como executar
 
 1. Clone o repositório
-2. Execute o comando:
+2. Suba o banco de dados:
+
+```bash
+docker compose up -d
+```
+
+3. Execute a aplicação:
 
 ```bash
 ./mvnw quarkus:dev
 ```
 
-3. Acesse: http://localhost:8080
+4. Acesse: http://localhost:8080
 
 ## Endpoints disponíveis
 
@@ -66,6 +71,7 @@ Sistema para controlar estoque de matérias-primas e produtos de uma indústria.
 
 - `GET /products/{productId}/raw-materials` - Lista matérias-primas de um produto
 - `POST /products/{productId}/raw-materials` - Associa matéria-prima ao produto
+- `PUT /products/{productId}/raw-materials/{associationId}` - Atualiza quantidade necessária
 - `DELETE /products/{productId}/raw-materials/{associationId}` - Remove associação
 
 **Exemplo de requisição POST:**
@@ -110,14 +116,15 @@ Acesse: http://localhost:8080/q/swagger-ui
 src/
 ├── main/
 │   ├── java/com/stockcontrol/
+│   │   ├── dto/             # Data Transfer Objects
 │   │   ├── entity/          # Entidades JPA
-│   │   ├── resource/        # Endpoints REST
-│   │   └── dto/             # Data Transfer Objects
+│   │   ├── exception/       # Exceções customizadas
+│   │   └── resource/        # Endpoints REST
 │   └── resources/
-│       ├── application.properties
-│       └── import.sql
+│       └── application.properties
+docker-compose.yaml              # PostgreSQL
 ```
 
 ## Status do projeto
 
-✅ Backend completo - Todos os requisitos funcionais implementados
+✅ Backend completo - API REST pronta para integração com frontend

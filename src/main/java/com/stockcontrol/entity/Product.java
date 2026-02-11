@@ -3,6 +3,7 @@ package com.stockcontrol.entity;
 import java.math.BigDecimal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
@@ -25,7 +26,7 @@ public class Product extends PanacheEntity {
     @Column(nullable = false, name = "price")
     public BigDecimal value;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     public List<ProductRawMaterial> rawMaterials;
 }
