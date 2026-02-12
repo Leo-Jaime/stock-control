@@ -15,6 +15,8 @@ import java.util.List;
 public class ProductionService {
 
     public ProductionReport calculateProduction() {
+        System.out.println("--- Iniciando Cálculo de Produção ---");
+        
         // 1. Buscar todos os produtos ordenados por valor (maior para menor)
         List<Product> products = Product.listAll();
         products.sort(Comparator.comparing((Product p) -> p.value).reversed());
@@ -25,13 +27,20 @@ public class ProductionService {
         for (Product product : products) {
             List<ProductRawMaterial> requiredMaterials = ProductRawMaterial.list("product.id", product.id);
 
-            // Se o produto não tem matérias-primas associadas, pula
+            System.out.printf("Analisando Produto: %s (ID: %d). Materiais necessários: %d%n", 
+                product.name, product.id, requiredMaterials.size());
+
+            // Se o produto não tem matérias-primas associadas, consideramos que não pode ser produzido
+            // (Assumindo que todo produto precisa de insumo. Se for serviço, mude a lógica)
             if (requiredMaterials.isEmpty()) {
+                System.out.println("  -> PULED: Sem matérias-primas associadas.");
                 continue;
             }
 
             // Calcular a quantidade máxima que pode ser produzida
             Integer maxQuantity = calculateMaxQuantity(requiredMaterials);
+            
+            System.out.printf("  -> Estoque permite produzir: %d unidades.%n", maxQuantity);
 
             // Se pode produzir pelo menos 1 unidade, adiciona na lista
             if (maxQuantity > 0) {
@@ -45,7 +54,8 @@ public class ProductionService {
                 suggestions.add(suggestion);
             }
         }
-
+        
+        System.out.println("--- Fim do Cálculo ---");
         return new ProductionReport(suggestions);
     }
 
@@ -54,17 +64,41 @@ public class ProductionService {
      * baseado no estoque disponível de matérias-primas
      */
     private Integer calculateMaxQuantity(List<ProductRawMaterial> requiredMaterials) {
+        if (requiredMaterials == null || requiredMaterials.isEmpty()) {
+            return 0;
+        }
+
         Integer minQuantity = Integer.MAX_VALUE;
 
         for (ProductRawMaterial material : requiredMaterials) {
             RawMaterial rawMaterial = material.rawMaterial;
-            Integer requiredQuantity = material.requiredQuantity;
+            
+            RawMaterial freshRm = RawMaterial.findById(rawMaterial.id);
+            if (freshRm != null) {
+                rawMaterial = freshRm;
+            }
 
-            Integer possibleQuantity = rawMaterial.stockQuantity / requiredQuantity;
+            Integer stock = rawMaterial.stockQuantity != null ? rawMaterial.stockQuantity : 0;
+            Integer required = material.requiredQuantity;
+
+            if (required == null || required <= 0) {
+                System.out.println("  -> WARN: Matéria-prima com quantidade necessária inválida (0). Ignorando restrição.");
+                continue; 
+            }
+
+            Integer possibleQuantity = stock / required;
+            
+            System.out.printf("    - Material: %s (Estoque: %d, Necessário: %d) -> Possível: %d%n", 
+                rawMaterial.name, stock, required, possibleQuantity);
 
             if (possibleQuantity < minQuantity) {
                 minQuantity = possibleQuantity;
             }
+        }
+        
+        // Se minQuantity ainda for MAX_VALUE (nenhuma matéria válida processada), retorna 0
+        if (minQuantity == Integer.MAX_VALUE) {
+            return 0;
         }
 
         return minQuantity;
