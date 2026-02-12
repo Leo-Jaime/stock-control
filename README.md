@@ -1,130 +1,133 @@
-# Sistema de Controle de Estoque
+# Sistema de Controle de Estoque (Stock Control)
 
-Sistema para controlar estoque de matérias-primas e produtos de uma indústria.
+[![React](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?logo=react)](https://stock-control-five.vercel.app/)
+[![Java](https://img.shields.io/badge/Backend-Java%2017%20%2B%20Quarkus-4695EB?logo=openjdk)](https://stock-control-api-me9f.onrender.com/q/swagger-ui/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](https://www.postgresql.org/)
 
-## Tecnologias utilizadas
+> **Acesse a aplicação online:**  
+> 🔗 **[https://stock-control-five.vercel.app](https://stock-control-five.vercel.app)**
+>
+> **Credenciais de Acesso (Demo):**  
+> 👤 Usuário: `admin`  
+> 🔑 Senha: `admin123`
 
-- Java 17
-- Quarkus 3.31.2
+---
+
+## 📌 Sobre o Projeto
+
+Sistema completo para controle de estoque de matérias-primas e produtos de uma indústria, com cálculo automático de potencial de produção.
+
+Desenvolvido como **Teste Full Stack**, utilizando as melhores práticas como **Clean Architecture**, **DTOs**, **JWT Authentication** e **Design System** customizado.
+
+### 🚀 Stack Tecnológico
+
+**Frontend (Vercel):**
+- React + TypeScript + Vite
+- Context API (Auth, Theme, Toast)
+- CSS Modules (Design System próprio, responsivo)
+- React Router DOM (Rotas protegidas)
+
+**Backend (Render):**
+- Java 17 + Quarkus 3.31
 - Hibernate ORM + Panache
-- RESTEasy Reactive (Quarkus REST)
-- Jackson (JSON)
-- PostgreSQL 15 (Docker)
-- Maven
+- RESTEasy Reactive
+- SmallRye JWT (Autenticação RBAC)
+- PostgreSQL (Docker em Dev / Render em Prod)
 
-## Como executar
+---
 
-1. Clone o repositório
-2. Suba o banco de dados:
+## 📸 Screenshots
 
+| Login | Dashboard |
+|---|---|
+| ![Login](/docs/images/login.png) | ![Dashboard](/docs/images/dashboard.png) |
+
+| Produtos | Matérias-Primas |
+|---|---|
+| ![Produtos](/docs/images/produtos.png) | ![Matérias-Primas](/docs/images/materias-primas.png) |
+
+| Associação Matéria-Prima | Plano de Produção |
+|---|---|
+| ![Associação](/docs/images/associar-materia-prima.png) | ![Produção](/docs/images/plano-de-producao.png) |
+
+---
+
+## ✨ Funcionalidades
+
+- **Autenticação Segura**: Login com JWT, proteção de rotas, auto-logout e persistência de sessão.
+- **Dashboard**: Visão geral com cards estatísticos e tabelas de alertas (estoque baixo).
+- **CRUD de Produtos**: Cadastro, edição e remoção com validações.
+- **CRUD de Matérias-primas**: Gestão de estoque com badges de status.
+- **Associação Inteligente**: Vincular matérias-primas a produtos (NxN) com quantidade necessária.
+- **Cálculo de Produção**: Algoritmo que analisa o estoque atual e sugere o máximo de produtos possíveis de serem fabricados.
+- **Dark Mode**: Tema claro/escuro persistente.
+
+---
+
+## 🛠️ Como executar localmente
+
+### Pré-requisitos
+- Java 17+
+- Node.js 18+
+- Docker
+
+### 1. Banco de Dados
+Suba o PostgreSQL via Docker:
 ```bash
 docker compose up -d
 ```
 
-3. Execute a aplicação:
-
+### 2. Backend (Quarkus)
 ```bash
+cd backend
 ./mvnw quarkus:dev
 ```
+O servidor iniciará em `http://localhost:8080`.
+*Documentação Swagger disponível em: `http://localhost:8080/q/swagger-ui`*
 
-4. Acesse: http://localhost:8080
-
-## Endpoints disponíveis
-
-### Produtos
-
-- `GET /products` - Lista todos os produtos
-- `GET /products/{id}` - Busca produto por ID
-- `POST /products` - Cria novo produto
-- `PUT /products/{id}` - Atualiza produto
-- `DELETE /products/{id}` - Deleta produto
-
-**Exemplo de requisição POST:**
-
-```json
-{
-  "code": "PROD001",
-  "name": "Cadeira Gamer",
-  "value": 899.9
-}
+### 3. Frontend (React)
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+Acesse a aplicação em `http://localhost:5173`.
 
-### Matérias-primas
+---
 
-- `GET /raw-materials` - Lista todas as matérias-primas
-- `GET /raw-materials/{id}` - Busca matéria-prima por ID
-- `POST /raw-materials` - Cria nova matéria-prima
-- `PUT /raw-materials/{id}` - Atualiza matéria-prima
-- `DELETE /raw-materials/{id}` - Deleta matéria-prima
-
-**Exemplo de requisição POST:**
-
-```json
-{
-  "code": "MAT001",
-  "name": "Madeira",
-  "stockQuantity": 100
-}
-```
-
-### Associação Produto-Matéria Prima
-
-- `GET /products/{productId}/raw-materials` - Lista matérias-primas de um produto
-- `POST /products/{productId}/raw-materials` - Associa matéria-prima ao produto
-- `PUT /products/{productId}/raw-materials/{associationId}` - Atualiza quantidade necessária
-- `DELETE /products/{productId}/raw-materials/{associationId}` - Remove associação
-
-**Exemplo de requisição POST:**
-
-```json
-{
-  "rawMaterialId": 1,
-  "requiredQuantity": 5
-}
-```
-
-### Cálculo de Produção
-
-- `GET /production/calculate` - Calcula produtos que podem ser produzidos com estoque atual
-
-**Resposta exemplo:**
-
-```json
-{
-  "suggestions": [
-    {
-      "productId": 1,
-      "productCode": "PROD001",
-      "productName": "Cadeira Gamer",
-      "productValue": 899.9,
-      "quantityCanProduce": 20,
-      "totalValue": 17998.0
-    }
-  ],
-  "totalProductionValue": 17998.0,
-  "totalProducts": 1
-}
-```
-
-## Documentação da API
-
-Acesse: http://localhost:8080/q/swagger-ui
-
-## Estrutura do projeto
+## 📂 Estrutura do Projeto
 
 ```
-src/
-├── main/
-│   ├── java/com/stockcontrol/
+stock-control/
+├── backend/                 # API Quarkus
+│   ├── src/main/java/com/stockcontrol/
+│   │   ├── config/          # Configurações (CORS, JWT)
 │   │   ├── dto/             # Data Transfer Objects
-│   │   ├── entity/          # Entidades JPA
-│   │   ├── exception/       # Exceções customizadas
-│   │   └── resource/        # Endpoints REST
-│   └── resources/
-│       └── application.properties
-docker-compose.yaml              # PostgreSQL
+│   │   ├── entity/          # Entidades JPA (User, Product...)
+│   │   ├── resource/        # Controllers REST
+│   │   └── service/         # Regras de Negócio e Auth
+│   └── Dockerfile           # Build Multi-stage para Prod
+│
+├── frontend/                # SPA React
+│   ├── src/
+│   │   ├── api/             # Camada de HTTP (Axios/Fetch)
+│   │   ├── components/      # UI Kit reutilizável
+│   │   ├── contexts/        # Estado Global (Auth, Theme)
+│   │   └── pages/           # Telas do sistema
+│   └── vite.config.ts       # Proxy reverso para Dev
+│
+└── docker-compose.yaml      # Infraestrutura local
 ```
 
-## Status do projeto
+---
 
-✅ Backend completo - API REST pronta para integração com frontend
+## 🔒 Segurança
+
+O sistema implementa segurança em camadas:
+1. **Frontend**: Rotas protegidas (`ProtectedRoute`), redirecionamento automático se token expirar (401).
+2. **Backend**: Endpoints protegidos com `@RolesAllowed("user")`, senhas com **Bcrypt**, tokens assinados com **RSA-256**.
+3. **Infra**: Variáveis de ambiente para credenciais de banco e chaves secretas.
+
+---
+
+Desenvolvido por **[Leo Jaime](https://leo-portifolio.vercel.app/)**
