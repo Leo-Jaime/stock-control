@@ -27,7 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, username]);
 
   const login = async (user: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
+    const apiUrl = import.meta.env.VITE_API_URL || '/api';
+    const res = await fetch(`${apiUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: user, password }),
