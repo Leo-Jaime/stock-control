@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @ApplicationScoped
-@ApplicationScoped
+
 public class ProductionService {
 
     public ProductionReport calculateProduction() {
