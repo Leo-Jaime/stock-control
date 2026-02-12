@@ -24,9 +24,9 @@ public class CorsConfig {
         CorsHandler corsHandler = CorsHandler.create()
             .addRelativeOrigin(".*")
             .allowedMethods(methods)
-            .allowedHeader("Content-Type")
-            .allowedHeader("Authorization")
-            .allowedHeader("Accept")
+            .allowedHeader("*")  // Allow all headers
+            .exposedHeader("Authorization")
+            .exposedHeader("Content-Type")
             .allowCredentials(true);
 
         router.route().order(0).handler(corsHandler);
