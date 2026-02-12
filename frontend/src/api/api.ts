@@ -44,13 +44,22 @@ export interface ApiError {
 }
 
 
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_URL || '/api';
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE}${url}`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       ...options,
     });
   } catch {
@@ -58,6 +67,13 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
       message: 'Não foi possível conectar ao servidor. Verifique se o backend está rodando.',
       status: 0,
     } as ApiError;
+  }
+
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = '/login';
+    throw { message: 'Sessão expirada. Faça login novamente.', status: 401 } as ApiError;
   }
 
   if (!res.ok) {

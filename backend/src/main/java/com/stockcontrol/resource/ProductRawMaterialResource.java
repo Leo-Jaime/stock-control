@@ -3,6 +3,7 @@ package com.stockcontrol.resource;
 import com.stockcontrol.dto.ProductRawMaterialRequest;
 import com.stockcontrol.dto.ProductRawMaterialResponse;
 import com.stockcontrol.service.ProductRawMaterialService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @Path("/products/{productId}/raw-materials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed("user")
 public class ProductRawMaterialResource {
 
     @Inject

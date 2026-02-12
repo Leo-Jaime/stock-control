@@ -3,6 +3,7 @@ package com.stockcontrol.resource;
 import com.stockcontrol.dto.ProductRequest;
 import com.stockcontrol.dto.ProductResponse;
 import com.stockcontrol.service.ProductService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @Path("/products")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed("user")
 public class ProductResource {
 
     @Inject

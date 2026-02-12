@@ -2,6 +2,7 @@ package com.stockcontrol.service;
 
 import com.stockcontrol.dto.RawMaterialRequest;
 import com.stockcontrol.dto.RawMaterialResponse;
+import com.stockcontrol.entity.ProductRawMaterial;
 import com.stockcontrol.entity.RawMaterial;
 import com.stockcontrol.exception.ConflictException;
 import com.stockcontrol.exception.NotFoundException;
@@ -66,9 +67,14 @@ public class RawMaterialService {
 
     @Transactional
     public void delete(Long id) {
-        boolean deleted = RawMaterial.deleteById(id);
-        if (!deleted) {
+        RawMaterial rawMaterial = RawMaterial.findById(id);
+        if (rawMaterial == null) {
             throw new NotFoundException("Matéria-prima não encontrada com o id: " + id);
         }
+
+        // Remove all product associations before deleting
+        ProductRawMaterial.delete("rawMaterial", rawMaterial);
+        rawMaterial.delete();
     }
 }
+

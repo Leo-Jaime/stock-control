@@ -35,6 +35,20 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
             return buildResponse(Response.Status.BAD_REQUEST, exception.getMessage());
         }
 
+        if (exception instanceof SecurityException
+                || exception instanceof io.quarkus.security.UnauthorizedException) {
+            return buildResponse(Response.Status.UNAUTHORIZED, "Token inválido ou expirado");
+        }
+
+        if (exception instanceof io.quarkus.security.ForbiddenException) {
+            return buildResponse(Response.Status.FORBIDDEN, "Acesso negado");
+        }
+
+        // Login failures
+        if (exception.getMessage() != null && exception.getMessage().contains("Usuário ou senha")) {
+            return buildResponse(Response.Status.UNAUTHORIZED, exception.getMessage());
+        }
+
         return buildResponse(
             Response.Status.INTERNAL_SERVER_ERROR,
             "Erro interno do servidor: " + exception.getMessage()
@@ -46,3 +60,4 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         return Response.status(status).entity(error).build();
     }
 }
+
