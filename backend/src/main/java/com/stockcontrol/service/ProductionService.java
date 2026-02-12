@@ -12,11 +12,10 @@ import java.util.Comparator;
 import java.util.List;
 
 @ApplicationScoped
+@ApplicationScoped
 public class ProductionService {
 
     public ProductionReport calculateProduction() {
-        System.out.println("--- Iniciando Cálculo de Produção ---");
-        
         // 1. Buscar todos os produtos ordenados por valor (maior para menor)
         List<Product> products = Product.listAll();
         products.sort(Comparator.comparing((Product p) -> p.value).reversed());
@@ -27,21 +26,14 @@ public class ProductionService {
         for (Product product : products) {
             List<ProductRawMaterial> requiredMaterials = ProductRawMaterial.list("product.id", product.id);
 
-            System.out.printf("Analisando Produto: %s (ID: %d). Materiais necessários: %d%n", 
-                product.name, product.id, requiredMaterials.size());
-
             // Se o produto não tem matérias-primas associadas, consideramos que não pode ser produzido
-            // (Assumindo que todo produto precisa de insumo. Se for serviço, mude a lógica)
             if (requiredMaterials.isEmpty()) {
-                System.out.println("  -> PULED: Sem matérias-primas associadas.");
                 continue;
             }
 
             // Calcular a quantidade máxima que pode ser produzida
             Integer maxQuantity = calculateMaxQuantity(requiredMaterials);
             
-            System.out.printf("  -> Estoque permite produzir: %d unidades.%n", maxQuantity);
-
             // Se pode produzir pelo menos 1 unidade, adiciona na lista
             if (maxQuantity > 0) {
                 ProductionSuggestion suggestion = new ProductionSuggestion(
@@ -55,7 +47,6 @@ public class ProductionService {
             }
         }
         
-        System.out.println("--- Fim do Cálculo ---");
         return new ProductionReport(suggestions);
     }
 
@@ -82,15 +73,11 @@ public class ProductionService {
             Integer required = material.requiredQuantity;
 
             if (required == null || required <= 0) {
-                System.out.println("  -> WARN: Matéria-prima com quantidade necessária inválida (0). Ignorando restrição.");
                 continue; 
             }
 
             Integer possibleQuantity = stock / required;
             
-            System.out.printf("    - Material: %s (Estoque: %d, Necessário: %d) -> Possível: %d%n", 
-                rawMaterial.name, stock, required, possibleQuantity);
-
             if (possibleQuantity < minQuantity) {
                 minQuantity = possibleQuantity;
             }

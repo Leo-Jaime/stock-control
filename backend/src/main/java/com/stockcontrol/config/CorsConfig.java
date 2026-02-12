@@ -32,4 +32,3 @@ public class CorsConfig {
         router.route().order(0).handler(corsHandler);
     }
 }
-git 
