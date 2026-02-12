@@ -70,5 +70,10 @@ public class ProductService {
         if (!deleted) {
             throw new NotFoundException("Produto não encontrado com id: " + id);
         }
+        // deleta as associações primeiro 
+        ProductRawMaterial.delete("product.id", id);
+        
+        //depois deleta o produto
+        product.delete();
     }
 }

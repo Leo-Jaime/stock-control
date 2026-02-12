@@ -72,8 +72,13 @@ public class RawMaterialService {
             throw new NotFoundException("Matéria-prima não encontrada com o id: " + id);
         }
 
-        // Remove all product associations before deleting
-        ProductRawMaterial.delete("rawMaterial", rawMaterial);
+        // verificar se esta sendo usada
+        long count = ProductRawMaterial.count("raMaterial.id", id);
+        if (count > 0){
+            throw new ConflictException(
+                "Não é possivel deletar. Esta matéria-prima está associada a " + count + "produtos(s). Remova as associações primeiro."
+            );
+        }
         rawMaterial.delete();
     }
 }
