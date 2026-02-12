@@ -73,7 +73,7 @@ public class RawMaterialService {
         }
 
         // verificar se esta sendo usada
-        long count = ProductRawMaterial.count("raMaterial.id", id);
+        long count = ProductRawMaterial.count("rawMaterial.id", id);
         if (count > 0){
             throw new ConflictException(
                 "Não é possivel deletar. Esta matéria-prima está associada a " + count + "produtos(s). Remova as associações primeiro."

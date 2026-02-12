@@ -3,6 +3,7 @@ package com.stockcontrol.service;
 import com.stockcontrol.dto.ProductRequest;
 import com.stockcontrol.dto.ProductResponse;
 import com.stockcontrol.entity.Product;
+import com.stockcontrol.entity.ProductRawMaterial;
 import com.stockcontrol.exception.ConflictException;
 import com.stockcontrol.exception.NotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -66,14 +67,14 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
-        boolean deleted = Product.deleteById(id);
-        if (!deleted) {
+        Product product = Product.findById(id);
+        if (product == null) {
             throw new NotFoundException("Produto não encontrado com id: " + id);
         }
         // deleta as associações primeiro 
         ProductRawMaterial.delete("product.id", id);
         
-        //depois deleta o produto
+        // depois deleta o produto
         product.delete();
     }
 }
