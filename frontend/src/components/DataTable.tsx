@@ -47,14 +47,14 @@ export default function DataTable<T>({
           {data.map((item, index) => (
             <tr key={(item as Record<string, unknown>).id as string ?? index}>
               {columns.map((col) => (
-                <td key={col.key}>
+                <td key={col.key} data-label={col.header}>
                   {col.render
                     ? col.render(item)
                     : String((item as Record<string, unknown>)[col.key] ?? '')}
                 </td>
               ))}
               {actions && (
-                <td>
+                <td data-label="Ações">
                   <div className="table-actions">{actions(item)}</div>
                 </td>
               )}
